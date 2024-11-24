@@ -18,7 +18,8 @@ const model = genAI.getGenerativeModel({
 
 app.post("/generate-contract", async (req, res) => {
   const data = req.body;
-
+  // Log the received data to debug
+  console.log("Received data:", data);
   const {
     cropDetails,
     contractDetails,
@@ -34,6 +35,7 @@ app.post("/generate-contract", async (req, res) => {
     -It should not contain any list or bullet points, all the things should be in sentences only.
     -The final document should be structured but readable, as though intended for real-world legal use.
     -You can include any other information in the contract that you consider important.
+    -For signature don't use two column format, use only single column format.
     - Company Details and Farmer Details will be filled by user only so use only blanks for them.
     - Input Fields:
   1. Company Details
@@ -92,7 +94,10 @@ app.post("/generate-contract", async (req, res) => {
           const chunkText = chunk.text();
           contractText += chunkText;
         }
-        return;
+        // console.log(contractText);
+        // Send the final contract text
+        console.log("Generated Contract:", contractText);
+        return res.status(200).json({ contract: contractText });
       } catch (error) {
         console.error("Error generating contract:", error.message);
         if (error.status === 503 && retries > 0) {
@@ -110,7 +115,7 @@ app.post("/generate-contract", async (req, res) => {
     //   contractText += chunkText;
     // }
 
-    res.status(200).json({ contract: contractText });
+    return res.status(500).json({ error: "All retries failed. Please try again later." });
   } catch (error) {
     console.error("Error generating contract:", error.message);
     res.status(500).json({ error: "Error generating contract" });
