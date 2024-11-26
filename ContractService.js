@@ -19,8 +19,10 @@ const model = genAI.getGenerativeModel({
 app.post("/generate-contract", async (req, res) => {
   const data = req.body;
   // Log the received data to debug
-  console.log("Received data:", data);
+  // console.log("Received data:", data);
   const {
+    companyDetails, 
+    farmerDetails,
     cropDetails,
     contractDetails,
     qualityControl,
@@ -28,30 +30,28 @@ app.post("/generate-contract", async (req, res) => {
     additionalInstructions,
   } = data;
 
-  const prompt = `- Draft a detailed and lengthy legal contract in paragraph format between a farmer and a buyer in about 1200-1400 words.
+  const prompt = `- Draft a detailed legal contract in paragraph format between a farmer and a buyer in about 1500-1800 words.
     -Ensure the contract includes standard clauses for crop purchase, including quality standards, pricing, payment terms, force majeure, dispute resolution, governing law, and termination. 
     -Write the entire text in clear, professional legal language using paragraphs. 
     -Each section of the contract should flow naturally into the next paragraph. 
     -It should not contain any list or bullet points, all the things should be in sentences only.
-    -The final document should be structured but readable, as though intended for real-world legal use.
-    -You can include any other information in the contract that you consider important.
-    -For signature don't use two column format, use only single column format.
-    - Company Details and Farmer Details will be filled by user only so use only blanks for them.
+    -The final document should be structured but readable, as though intended for real-world legal use but take information from given input fields only.
+    -Generate the content like in single column only, dont but signatures or names field side by side in the end.
     - Input Fields:
   1. Company Details
-  - Company Name: [Company Name]
-  - Corporate Office Address: [Corporate Office Address]
-  - Representative Name: [Representative Name]
-  - Designation of Representative: [Designation of Representative]
-  - Company Contact Details: [Company Contact Details]
+  - Name: ${companyDetails.companyName}
+  - Address: ${companyDetails.address}
+  - Representative Name: ${companyDetails.representativeName}
+  - Designation: ${companyDetails.designation}
+  - Contact Details: ${companyDetails.contactDetails}
 
   2. Farmer Details
-  - Farmer's Name: [Farmer's Name]
-  - Village: [Village]
-  - Tehsil: [Tehsil]
-  - District: [District]
-  - State: [State]
-  - Farmer's Contact Number: [Farmer's Contact Number]
+  - Name: ${farmerDetails.farmerName}
+  - State: ${farmerDetails.state}
+  - Village: ${farmerDetails.village}
+  - Tehsil: ${farmerDetails.tehsil}
+  - District: ${farmerDetails.district}
+  - Contact Number: ${farmerDetails.contactNumber}
 
   3.Crop Details:
   - Cultivation Start Date: ${cropDetails.cultivationStartDate}
@@ -78,8 +78,6 @@ app.post("/generate-contract", async (req, res) => {
 
   7.Additional Instructions:
   - ${additionalInstructions}
-
-- The contract must be suitable for legal purposes and include all necessary protections for both parties.
 `;
 
   try {
@@ -96,8 +94,10 @@ app.post("/generate-contract", async (req, res) => {
         }
         // console.log(contractText);
         // Send the final contract text
-        console.log("Generated Contract:", contractText);
-        return res.status(200).json({ contract: contractText });
+        console.log(contractText);
+        res.setHeader("Content-Type", "text/plain");
+        res.status(200).send(contractText);
+        return;
       } catch (error) {
         console.error("Error generating contract:", error.message);
         if (error.status === 503 && retries > 0) {
